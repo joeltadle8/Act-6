@@ -1,0 +1,161 @@
+import 'dart:developer';
+import 'dart:io';
+
+class Library with searchIndex, mainMenuProcesses{
+  var allBooks, lentBooks, bookList=[], userList=[];
+  List genres=["Computer Science", "Philosophy", "Pure Science", "Art and Recreation", "History"];
+
+  //constructor that sets # of books to 0 and # of lent books to 0 for every instance of Library
+
+            Library(){
+            allBooks=0;
+            lentBooks=0;
+  }
+
+  //return number of books in library's ownership including those lent out
+
+            int numOfBooks(){
+            return allBooks;
+  }
+
+  //return number of lent out books
+          
+           int numOfLent(){
+           return lentBooks;
+  }
+
+  //add book to the collection
+  //used this method than directly creating a new object of Books in main to ensure that a new Books object will be created only if there is a Library object
+ 
+            void addBook(String title, String author, String genre, String ISBN){
+    var book=new Books(title, author, genre, ISBN);
+    bookList.add(book);
+    allBooks++;
+  }
+
+  //lending a book to the user
+ 
+              void lendBook(int userIndex){
+
+    //loop does not end until user selects the finish adding option
+             
+              for(var doAddBook='1';doAddBook!='2';){
+
+      //1 means add book, 2 means finish adding books
+     
+               stdout.write("\n(1)Add book ISBN\n(2)Finish adding\nType choice:");
+    
+      doAddBook=stdin.readLineSync()!;
+
+               if(doAddBook=='1'){
+        //loop does not end until user inputs correct ISBN
+  
+               for(int bookIndex=-1;bookIndex==-1;){
+      
+               stdout.write("\nEnter book ISBN: ");
+        
+         String ISBNbyUser=stdin.readLineSync()!;
+          bookIndex=findBookIndex(bookList, ISBNbyUser);
+
+          //function findBookIndex returns -1 if ISBN does not match any record in the library's books collection
+       
+                if(bookIndex==-1)
+            print("Book not found. Please enter ISBN again.");
+        
+                 else if(bookList[bookIndex].status==0)
+            print("Book is currently borrowed by someone else.");
+                  else{
+            //book is added to the user's borrowed books list
+            //book's status in the library is changed to unavailable
+            //library's count of lent books increments
+            userList[userIndex].borrowedBooks.add(bookList[bookIndex]);
+            bookList[bookIndex].status=0;
+            lentBooks++;
+          }
+        }
+      }
+                   else if(doAddBook=='2')
+        print("\nBooks added to borrow list.\n");
+    
+                   else
+        print("Invalid choice. Please try again.");
+    }
+  }
+
+     //library accepts returned books from user
+    //all books in user's borrow list will be returned
+ 
+                   void acceptReturn(int userIndex){
+    print("\nReturned books: ");
+                if(userList[userIndex].borrowedBooks.length!=0){
+                 for(int i=0;i<userList[userIndex].borrowedBooks.length;){
+    
+                 int bookIndex=findBookIndex(bookList, userList[userIndex].borrowedBooks[i].ISBN);
+            userList[userIndex].borrowedBooks.removeAt(0);
+        bookList[bookIndex].status=1;
+        lentBooks--;
+        print("\t${bookList[bookIndex].title} by ${bookList[bookIndex].author}");
+      }
+    }
+    
+    else
+            print("\nNo borrowed books in your record.");
+  }
+  
+     //adding new user
+    //this method is used rather than creating an object in main method to ensure that a new User object will be created only if there is an existing Library object
+
+  void newUser(String fullName, String address){
+    var user=new User(fullName, address);
+    userList.add(user);
+  }
+}
+
+    //class for books containing necessary attributes
+
+class Books{
+                 late String title;
+                 late String author;
+                 late String genre;
+                 late String ISBN;
+                 late int status; //0=borrowed, 1=available
+  var booksBorrowed=[];
+
+        //constructor to set values of attributes for every book instance
+ 
+  Books(title, author, genre, ISBN){
+                 this.title=title;
+                 this.author=author;
+                 this.genre=genre;
+                 this.ISBN=ISBN;
+    status=1; //status is immediately given value of 1 since it is available once added to collection
+    
+       }
+  
+  }
+
+      //class for users containing necessary attributes
+
+    class User
+{
+                 late String fullName;
+                 late String address;
+                 var borrowedBooks=[];
+                 User(String fullName, String address)
+  
+  {
+        this.fullName=fullName;
+        this.address=address;
+  }
+  
+}
+
+   //mixin for index searching algorithms for books and users
+                  mixin searchIndex
+
+{
+	
+  //method for finding certain book's index in library's users list
+  //book is searched based on matching ISBN
+ 
+             int findBookIndex(var listOfBooks, String ISBN)
